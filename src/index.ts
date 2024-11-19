@@ -11,16 +11,13 @@ app.get(
     "query",
     z.object({
       url: z.string().url(),
-      markdown: z.union([z.literal("true"), z.literal("false")]).optional(),
     }),
   ),
   async (c) => {
     const url = c.req.query("url")!;
-    const markdownParam = c.req.query("markdown") || "true";
-    const markdown = markdownParam === "true" || markdownParam === "1";
     try {
-      console.log("scraping", url, markdown);
-      const page = await scrape({url, markdown});
+      console.log("scraping", url);
+      const page = await scrape({url});
       return c.json(page);
     } catch (e) {
       if (e instanceof Error) {

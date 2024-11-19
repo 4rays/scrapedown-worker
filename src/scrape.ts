@@ -1,36 +1,52 @@
-import { Readability } from "@mozilla/readability";
-import { parseHTML } from "linkedom";
+import {Readability} from "@mozilla/readability";
+import {parseHTML} from "linkedom";
 import TurndownService from "./turndown";
 
-export const scrape = async ({
-  url,
-  markdown,
-}: {
-  url: string;
-  markdown: boolean;
-}) => {
+export const scrape = async ({url}: {url: string}) => {
   const response = await fetch(url, {
     headers: {
       "User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)",
     },
   });
   const html = await response.text();
-  console.log("html", html);
+
+  const getCoverImage = (html: string) => {
+    const doc = parseHTML(html);
+    const metaTags = doc.window.document.querySelectorAll(
+      'meta[property="og:image"], meta[name="twitter:image"]',
+    );
+
+    let coverImage: string | null = null;
+
+    metaTags.forEach((tag: any) => {
+      if (tag instanceof doc.window.HTMLElement) {
+        const imageUrl = tag.getAttribute("content");
+        if (imageUrl && !coverImage) {
+          coverImage = imageUrl;
+        }
+      }
+    });
+
+    return coverImage;
+  };
+
+  const coverImage = getCoverImage(html);
   const article = extract(html);
 
   if (article == null) {
     return null;
   }
 
-  if (markdown) {
-    const textContent = convertToMarkdown(article.content);
-    return { ...article, textContent };
-  } else {
-    const content = cleanString(article.content);
-    const textContent = cleanString(article.textContent);
+  let textContent = convertToMarkdown(article.content);
+  textContent = textContent.replace(/!\[.*?\]\(.*?\)/g, "");
 
-    return { ...article, content, textContent };
-  }
+  return {
+    title: article.title,
+    byline: article.byline,
+    date: article.publishedTime,
+    textContent: textContent,
+    image: coverImage,
+  };
 };
 
 const extract = (html: string) => {
@@ -44,13 +60,3 @@ const convertToMarkdown = (html: string) => {
   const doc = parseHTML(html);
   return turndown.turndown(doc.window.document);
 };
-
-//
-const cleanString = (str: string) =>
-  str
-    // Replace various whitespace and zero-width characters with a single space
-    .replace(/[\s\t\u200B-\u200D\uFEFF]+/g, " ")
-    // Remove leading whitespace from each line in the string
-    .replace(/^\s+/gm, "")
-    // Collapse multiple newline characters into a single newline
-    .replace(/\n+/g, "\n");

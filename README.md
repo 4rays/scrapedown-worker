@@ -26,16 +26,10 @@ GET https://<worker-name>.workers.dev/?url=https://example.com&markdown=true
 
 ```json
 {
-  "page": {
-    "byline": "Author Name",
-    "content": "... stripped html content ...",
-    "dir": null,
-    "excerpt": "..."
-    "lang": null,
-    "length": 191,
-    "siteName": null,
-    "textContent": "... markdown content ...",
-    "title": "Example Domain"
-  }
+  "byline": "SVT Nyheter",
+  "date": "2024-11-14T09:22:55+01:00",
+  "image": "...",
+  "textContent": "...",
+  "title": "Ministerns bananfobi: ”Väldigt ovanlig”"
 }
 ```
